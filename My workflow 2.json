@@ -1,0 +1,294 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://divar.ir/s/mashhad/rent-office?bbox=59.2747803%2C36.1845741%2C60.1158295%2C36.9758339&credit=2000000-60000000&map_bbox=59.2747802734375%2C36.184574127197266%2C60.11582946777344%2C36.975833892822266&map_place_hash=3%7C%7Coffice-rent&rent=2000000-8000000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "b3f7ee8c-94b8-404a-8bbf-7d3dc97fdd4b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": ".kt-post-card__title",
+              "returnArray": true
+            },
+            {
+              "key": "rahn",
+              "cssSelector": "div .kt-post-card__description:first-of-type",
+              "returnArray": true
+            },
+            {
+              "key": "ejare",
+              "cssSelector": "div .kt-post-card__description:nth-of-type(2)",
+              "returnArray": true
+            },
+            {
+              "key": "place",
+              "cssSelector": ".kt-post-card__bottom-description",
+              "returnArray": true
+            },
+            {
+              "key": "href",
+              "cssSelector": ".kt-post-card__action",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        -16
+      ],
+      "id": "7c3b1689-a728-43a8-8cee-e10a2e0a4066",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "title, rahn, ejare, place, href",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -16
+      ],
+      "id": "806c60c6-b88c-491f-b5aa-6e9fd729dceb",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "89247ad3-8a33-461f-a901-be819612e961",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "لاین",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "4b08a026-0383-4d8d-82a4-b8e3825f2848",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "زیبایی",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "20967e43-4a88-41bd-a633-a838241c31f6",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "مطب",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "9d127a17-7c53-476a-8a2d-3513e761d27c",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "وکیل",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "03fdb67c-038e-49ed-8cc8-b3bf33d25fcd",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "وکالت",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -16
+      ],
+      "id": "f48897f7-b9f2-46ec-b12e-80fc97902b36",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "path": "b251e0c3-8644-4b5d-9b4a-a691401d3f1b",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        -16
+      ],
+      "id": "d9744097-9264-4995-83f4-4ab185ef11d5",
+      "name": "Webhook",
+      "webhookId": "b251e0c3-8644-4b5d-9b4a-a691401d3f1b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items.map(item => item.json);\n\n// ساخت جدول\nlet html = '<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\" style=\"border-collapse: collapse;\">';\nhtml += '<tr><th>عنوان</th><th>ودیعه</th><th>اجاره</th><th>محل</th></tr>';\n\n// بدنه (مقادیر)\ndata.forEach(row => {\n  html += '<tr>';\n  html += `<td> <a href='https://divar.ir${row.href}'> ${row.title} </a></td>`;\n  html += `<td>${row.rahn}</td>`;\n  html += `<td>${row.ejare}</td>`;\n  html += `<td>${row.place}</td>`;\n  html += '</tr>';\n});\n\nhtml += '</table>';\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -16
+      ],
+      "id": "8cb7a10e-63e5-4388-b97a-83d5b6bee6be",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n\n<html>\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>My HTML document</title>\n</head>\n<body>\n {{ $json.html }}\n</body>\n</html>\n\n<style>\n.container {\n  background-color: #ffffff;\n  text-align: center;\n  padding: 16px;\n  border-radius: 8px;\n}\n\nh1 {\n  color: #ff6d5a;\n  font-size: 24px;\n  font-weight: bold;\n  padding: 8px;\n}\n\nh2 {\n  color: #909399;\n  font-size: 18px;\n  font-weight: bold;\n  padding: 8px;\n}\n</style>\n\n<script>\nconsole.log(\"Hello World!\");\n</script>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "3ac5541a-1926-4d26-8499-8610c9659da8",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1152,
+        -16
+      ],
+      "id": "ef1826c0-226a-47d4-9d82-ff2155f112bd",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5c06e6ff-4045-4888-b5af-abdb3890f196",
+  "meta": {
+    "instanceId": "416f7131a7ca308340937b7d8a5524f6f89613dde1bd129314870215727762ac"
+  },
+  "id": "qT1YpnMaWNG2HXIv",
+  "tags": []
+}
